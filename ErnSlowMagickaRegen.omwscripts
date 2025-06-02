@@ -1,0 +1,3 @@
+GLOBAL:scripts/ErnSlowMagickaRegen/global.lua
+PLAYER:scripts/ErnSlowMagickaRegen/player.lua
+NPC, CREATURE, PLAYER:scripts/ErnSlowMagickaRegen/actor.lua
