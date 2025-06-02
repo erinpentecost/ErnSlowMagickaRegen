@@ -9,6 +9,7 @@ If you have 50 Intelligence, that's 1 Magicka every 16 seconds.
 But if you're running around and have low Fatigue, you're not really resting. So, multiply that rate by your ratio of current Fatigue.
 If you have 25% of your maximum Fatigue, that 1 Magicka per 16 seconds drops to 1 Magicka per 64 seconds.
 
+![example](title_image.jpg)
 
 ## Installing
 Extract [main](https://github.com/erinpentecost/ErnSlowMagickaRegen/archive/refs/heads/main.zip) to your `mods/` folder.
