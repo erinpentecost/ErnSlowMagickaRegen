@@ -4,11 +4,11 @@ description: "Magicka regenerates at the same rate as resting, relative to Fatig
 modSettingsTitle: "Mod Options"
 modSettingsDesc: "Change how the mod works."
 
-enableNPCs_name: "Enable Regen for NPCs"
-enableNPCs_description: "Enable slow magicka regeneration for NPCs, too."
+scale_name: "Scale (Players)"
+scale_description: "Multiply magicka regeneration by this amount for all players."
 
-scale_name: "Scale"
-scale_description: "Multiply magicka regeneration by this amount."
+npcScale_name: "Scale (NPCs)"
+npcScale_description: "Multiply magicka regeneration by this amount for all NPCs. Set to 0 to disable."
 
 debugMode_name: "Debug Mode"
 debugMode_description: "Print debug messages."

@@ -17,6 +17,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 local interfaces = require("openmw.interfaces")
 local storage = require("openmw.storage")
+local types = require("openmw.types")
 
 local MOD_NAME = "ErnSlowMagickaRegen"
 
@@ -44,16 +45,21 @@ local function initSettings()
         permanentStorage = false,
         settings = {
             {
-                key = "enableNPCs",
-                name = "enableNPCs_name",
-                description = "enableNPCs_description",
-                default = true,
-                renderer = "checkbox"
-            },
-            {
                 key = "scale",
                 name = "scale_name",
                 description = "scale_description",
+                default = 1,
+                renderer = "number",
+                argument = {
+                    integer = false,
+                    min = 0,
+                    max = 50,
+                }
+            },
+            {
+                key = "npcScale",
+                name = "npcScale_name",
+                description = "npcScale_description",
                 default = 1,
                 renderer = "number",
                 argument = {
@@ -75,12 +81,12 @@ local function initSettings()
     debugPrint("init settings done")
 end
 
-local function enableNPCs()
-    return settingsStore:get("enableNPCs")
-end
-
-local function scale()
-    return settingsStore:get("scale")
+local function scale(actor)
+    if actor.type ~= types.Player then
+        return settingsStore:get("npcScale")
+    else
+        return settingsStore:get("scale")
+    end
 end
 
 local function debugMode()
@@ -91,7 +97,6 @@ return {
     initSettings = initSettings,
     settingsStore = settingsStore,
     MOD_NAME = MOD_NAME,
-    enableNPCs = enableNPCs,
     scale = scale,
     debugPrint = debugPrint,
 }
