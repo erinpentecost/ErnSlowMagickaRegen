@@ -20,7 +20,11 @@ local settings = require("scripts.ErnSlowMagickaRegen.settings")
 local types = require("openmw.types")
 local self = require("openmw.self")
 
+local lastUpdateTime = nil
+-- partialMagicka tracks how much regen we've stocked up and have yet to apply.
 local partialMagicka = 0.0
+-- lastFatigueRatio is fatigue sample we took the last time we regenerated.
+local lastFatigueRatio = 0.5
 
 local function isStunted(actor)
     for _, effect in pairs(types.Actor.activeEffects(self)) do
@@ -31,8 +35,12 @@ local function isStunted(actor)
     return false
 end
 
-local function regen(actor, durationInSeconds)
-    if (self.type ~= types.Player) and (settings.enableNPCs() ~= true) then
+local function skipRegen(actor)
+    return (settings.scale(actor) <= 0) or (isStunted(actor) == true)
+end
+
+local function regen(actor, durationInSeconds, fatigueRatio)
+    if skipRegen(actor) then
         return
     end
 
@@ -43,16 +51,14 @@ local function regen(actor, durationInSeconds)
         return
     end
 
-    if isStunted(actor) then
+    scale = settings.scale(actor)
+    if scale <= 0 then
         return
     end
 
-    local fatigueStat = self.type.stats.dynamic.fatigue(self)
-    local fatigueRatio = fatigueStat.current / fatigueStat.base
-
     local intelligence = self.type.stats.attributes.intelligence(actor).modified
 
-    local magickaDelta = 0.00125 * intelligence * fatigueRatio * settings.scale()
+    local magickaDelta = 0.00125 * intelligence * fatigueRatio * scale
 
     partialMagicka = partialMagicka + (magickaDelta * durationInSeconds)
 
@@ -62,21 +68,48 @@ local function regen(actor, durationInSeconds)
         
         if magickaStat.current < maximumMagicka then
             settings.debugPrint("Regenerating "..wholeIncrease..
-                " magicka for actor ".. self.id .. ". Currently " ..
-                magickaStat.current .. " of " .. maximumMagicka ..
-                ". Instant rate is " .. magickaDelta .. " per second.")
+                " magicka for actor ".. self.id .. ". Magicka: " ..
+                magickaStat.current .. "/" .. maximumMagicka ..
+                ". Instant rate: " .. magickaDelta .. "/s. DeltaTime: " .. durationInSeconds .. ".")
 
             magickaStat.current = math.min(magickaStat.current+wholeIncrease, maximumMagicka)
         end
     end
 end
 
-local function onUpdate(dt)
-    regen(self, dt)
+local function regenMagicka(data)
+    -- simTime is real-world time.
+    -- gameTime is the time for actors in Morrowind.
+    simTime = data.simTime
+
+    if lastUpdateTime == nil then
+        lastUpdateTime = simTime
+    end
+
+    deltaTime = simTime - lastUpdateTime
+    --print("simTime: " .. simTime .. " last: " .. lastUpdateTime .. "delta: " .. deltaTime)
+    lastUpdateTime = simTime
+
+    if deltaTime < 0 then
+        error("deltaTime for actor " .. self.id .. " is " .. deltaTime)
+    end
+
+    -- deltaTime is the time since we last ran regen.
+    -- This works even if an actor became inactive.
+
+    -- Get the average of fatigue from our last regen to right now,
+    -- and use that to inform how much regen should be reduced.
+    local fatigueStat = self.type.stats.dynamic.fatigue(self)
+    local currentFatigueRatio = fatigueStat.current / fatigueStat.base
+    local avgFatigue = (currentFatigueRatio + lastFatigueRatio) / 2.0
+    lastFatigueRatio = currentFatigueRatio
+
+    -- Actually do the regen.
+    regen(self, deltaTime, avgFatigue)
 end
 
 return {
-    engineHandlers = {
-        onUpdate = onUpdate,
-    }
+    eventHandlers = {
+        regenMagicka = regenMagicka
+    },
 }
