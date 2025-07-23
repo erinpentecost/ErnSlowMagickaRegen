@@ -30,15 +30,14 @@ local deltaTime = 0.0
 
 local function onUpdate(dt)
     -- Don't run the full check every frame.
-    -- Instead, check every 1/4 second.
     deltaTime = deltaTime + dt
-    if deltaTime < 0.25 then
+    if deltaTime < 1.25 then
         return
     end
 
     local simTime = world.getSimulationTime()
     local gameTime = world.getGameTime()
-    local simTimeScale =  world.getSimulationTimeScale()
+    local simTimeScale = world.getSimulationTimeScale()
 
     for _, actor in ipairs(world.activeActors) do
         actor:sendEvent("regenMagicka", {
