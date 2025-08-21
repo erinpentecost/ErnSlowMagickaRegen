@@ -48,12 +48,14 @@ local function regen(actor, durationInSeconds, fatigueRatio)
 
     local magickaStat = self.type.stats.dynamic.magicka(self)
     local maximumMagicka = magickaStat.base
-    if magickaStat.current >= maximumMagicka then
+    -- magickaStat.current can be negative if a fortify magicka effect expires.
+    local currentMagicka = math.max(0, magickaStat.current)
+    if currentMagicka >= maximumMagicka then
         partialMagicka = 0.0
         return
     end
 
-    scale = settings.scale(actor)
+    local scale = settings.scale(actor)
     if scale <= 0 then
         return
     end
@@ -67,14 +69,14 @@ local function regen(actor, durationInSeconds, fatigueRatio)
     if partialMagicka >= 1.0 then
         local wholeIncrease = math.floor(partialMagicka)
         partialMagicka = partialMagicka - wholeIncrease
-        
-        if magickaStat.current < maximumMagicka then
-            settings.debugPrint("Regenerating "..wholeIncrease..
-                " magicka for actor ".. self.id .. ". Magicka: " ..
-                magickaStat.current .. "/" .. maximumMagicka ..
+
+        if currentMagicka < maximumMagicka then
+            settings.debugPrint("Regenerating " .. wholeIncrease ..
+                " magicka for actor " .. self.id .. ". Magicka: " ..
+                currentMagicka .. "/" .. maximumMagicka ..
                 ". Instant rate: " .. magickaDelta .. "/s. DeltaTime: " .. durationInSeconds .. ".")
 
-            magickaStat.current = math.min(magickaStat.current+wholeIncrease, maximumMagicka)
+            magickaStat.current = math.min(currentMagicka + wholeIncrease, maximumMagicka)
         end
     end
 end
@@ -84,7 +86,7 @@ local function regenMagicka(data)
     -- simTime rate is 0.00125 x Int per  second.
     -- gameTime is the time for actors in Morrowind.
     -- gameTime rate is 0.15 x Int per hour, or 0.000041667 x Int per second
-    gameTime = data.gameTime
+    local gameTime = data.gameTime
 
     if lastUpdateTime == nil then
         lastUpdateTime = gameTime
@@ -95,7 +97,7 @@ local function regenMagicka(data)
         lastMagicka = currentMagicka
     end
 
-    deltaTime = gameTime - lastUpdateTime
+    local deltaTime = gameTime - lastUpdateTime
     --print("gameTime: " .. gameTime .. " last: " .. lastUpdateTime .. "delta: " .. deltaTime)
     lastUpdateTime = gameTime
 
