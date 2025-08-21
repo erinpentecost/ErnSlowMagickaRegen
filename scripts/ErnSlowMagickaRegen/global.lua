@@ -27,25 +27,31 @@ settings.initSettings()
 
 -- deltaTime tracks how long since we've last regenerated.
 local deltaTime = 0.0
+local partition = 0
 
 local function onUpdate(dt)
     -- Don't run the full check every frame.
     deltaTime = deltaTime + dt
-    if deltaTime < 1.25 then
+    if deltaTime < 0.5 then
         return
     end
+    -- We only send events to actors 1 out of 4 times.
+    -- This prevents frame drops when there are a ton of actors.
+    partition = (partition + 1) % 4
 
     local simTime = world.getSimulationTime()
     local gameTime = world.getGameTime()
     local simTimeScale = world.getSimulationTimeScale()
 
     for _, actor in ipairs(world.activeActors) do
-        actor:sendEvent("regenMagicka", {
-            deltaTime = deltaTime,
-            simTime = simTime,
-            gameTime = gameTime,
-            simTimeScale = simTimeScale
-        })
+        if string.byte(actor.id) % 4 == 0 then
+            actor:sendEvent("regenMagicka", {
+                deltaTime = deltaTime,
+                simTime = simTime,
+                gameTime = gameTime,
+                simTimeScale = simTimeScale
+            })
+        end
     end
 
     deltaTime = 0.0
