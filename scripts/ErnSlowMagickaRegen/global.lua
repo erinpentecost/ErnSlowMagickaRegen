@@ -44,7 +44,7 @@ local function onUpdate(dt)
     local simTimeScale = world.getSimulationTimeScale()
 
     for _, actor in ipairs(world.activeActors) do
-        if string.byte(actor.id) % 4 == 0 then
+        if string.byte(actor.id) % 4 == partition then
             actor:sendEvent("regenMagicka", {
                 deltaTime = deltaTime,
                 simTime = simTime,
